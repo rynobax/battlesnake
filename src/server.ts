@@ -2,7 +2,8 @@ import * as bodyParser from 'body-parser';
 import * as express from 'express';
 import * as logger from 'morgan';
 
-import snakes, { Start, Move, Snek, End } from './snakes';
+import snakes from './snakes';
+import { Start, Move, End, Snek } from './snakes/types';
 
 const app = express();
 
@@ -34,15 +35,16 @@ interface EndRequest extends Express.Request {
 Object.entries(snakes).forEach(([name, Snake]) => {
   const games = new Map<string, Snek>();
 
-  app.post(`${name}/start`, (request: StartRequest, response) => {
+  app.post(`/${name}/start`, (request: StartRequest, response) => {
     const { id } = request.body.game;
+    console.log(`New game ${id}`);
     const snake = new Snake();
     games.set(id, snake);
     const res = snake.start(request.body);
     return response.json(res);
   });
 
-  app.post(`${name}/move`, (request: MoveRequest, response) => {
+  app.post(`/${name}/move`, (request: MoveRequest, response) => {
     const { id } = request.body.game;
     const snake = games.get(id);
     if (!snake) throw Error(`Could not find snake for game ${id}!`);
@@ -50,13 +52,13 @@ Object.entries(snakes).forEach(([name, Snake]) => {
     return response.json(res);
   });
 
-  app.post(`${name}/end`, (request: EndRequest, response) => {
+  app.post(`/${name}/end`, (request: EndRequest, response) => {
     const { id } = request.body.game;
     games.delete(id);
     return response.json({ gg: true });
   });
 
-  app.post(`${name}/ping`, (_, response) => {
+  app.post(`/${name}/ping`, (_, response) => {
     return response.json({ who: 'dat' });
   });
 });

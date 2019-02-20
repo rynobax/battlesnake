@@ -35,7 +35,7 @@
     "node": ">=8.x"
   },
   "scripts": {
-    "start": "cross-env PORT=5000 nodemon  index.js",
+    "start": "cross-env PORT=5000 nodemon",
     "compile": "tsc"
   },
   "husky": {
