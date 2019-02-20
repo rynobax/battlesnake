@@ -1,6 +1,8 @@
-import { Board } from '../types';
+import { Board, Direction } from '../types';
+import { getValidDirs } from '../util';
+const { DOWN, LEFT, RIGHT, UP } = Direction;
 
-const { uniq } = require('lodash');
+import { uniq } from 'lodash';
 
 const isUpper = (c: string) => c.toUpperCase() === c;
 const notEmpty = (c: string) => c !== '-';
@@ -72,5 +74,86 @@ it('b works', () => {
         body: [{ x: 1, y: 1 }, { x: 1, y: 2 }],
       },
     ],
+  });
+});
+
+describe('getValidDirs', () => {
+  test.each([
+    [
+      'free',
+      b`
+      ---
+      -X-
+      ---
+      `,
+      [UP, DOWN, LEFT, RIGHT],
+    ],
+    [
+      'left wall',
+      b`
+      ---
+      X--
+      ---
+      `,
+      [UP, DOWN, RIGHT],
+    ],
+    [
+      'Right wall',
+      b`
+      ---
+      --X
+      ---
+      `,
+      [UP, DOWN, LEFT],
+    ],
+    [
+      'Top wall',
+      b`
+      -X-
+      ---
+      ---
+      `,
+      [DOWN, RIGHT, LEFT],
+    ],
+    [
+      'Bottom wall',
+      b`
+      ---
+      ---
+      -X-
+      `,
+      [UP, RIGHT, LEFT],
+    ],
+    [
+      'Top right corner',
+      b`
+      --X
+      ---
+      ---
+      `,
+      [DOWN, LEFT],
+    ],
+    [
+      'Snake',
+      b`
+      -Y--
+      -yX-
+      -y--
+      `,
+      [RIGHT, UP, DOWN],
+    ],
+    [
+      'Avoids body',
+      b`
+      -xx-
+      -xX-
+      ----
+      `,
+      [RIGHT, DOWN],
+    ],
+  ])('%s', (_, board: Board, expected) => {
+    const [snake] = board.snakes.filter(s => s.name === 'X');
+    const head = snake.body[0];
+    expect(getValidDirs(head, board).sort()).toEqual(expected.sort());
   });
 });
