@@ -1,5 +1,41 @@
 import nate from './nate';
 
+type HeadType =
+  | 'beluga'
+  | 'bendr'
+  | 'dead'
+  | 'evil'
+  | 'fang'
+  | 'pixel'
+  | 'regular'
+  | 'safe'
+  | 'sand-worm'
+  | 'shades'
+  | 'silly'
+  | 'smile'
+  | 'tongue';
+
+type TailType =
+  | 'block-bum'
+  | 'bolt'
+  | 'curled'
+  | 'fat-rattle'
+  | 'freckled'
+  | 'hook'
+  | 'pixel'
+  | 'regular'
+  | 'round-bum'
+  | 'sharp'
+  | 'skinny'
+  | 'small-rattle';
+
+export enum Direction {
+  UP = 'up',
+  RIGHT = 'right',
+  DOWN = 'down',
+  LEFT = 'left',
+}
+
 interface Position {
   x: number;
   y: number;
@@ -23,13 +59,13 @@ export interface Start {
   game: { id: string };
   turn: number;
   board: Board;
-  you: Snake
+  you: Snake;
 }
 
 export interface StartRes {
   color: string;
-  headType: string;
-  tailType: string;
+  headType: HeadType;
+  tailType: TailType;
 }
 
 export interface Move {
@@ -42,7 +78,7 @@ export interface Move {
 }
 
 export interface MoveRes {
-  move: 'up' | 'down' | 'left' | 'right';
+  move: Direction;
 }
 
 export interface End {
@@ -57,5 +93,5 @@ export abstract class Snek {
 }
 
 export default {
-  nate
+  nate,
 };

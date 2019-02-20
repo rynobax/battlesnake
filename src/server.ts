@@ -94,7 +94,7 @@ app.use((err: any, _: any, res: any, next: any) => {
   res.status(404);
   return res.send({
     status: 404,
-    error: err.message || "These are not the snakes you're looking for"
+    error: err.message || "These are not the snakes you're looking for",
   });
 });
 
@@ -104,7 +104,7 @@ app.use((err: any, _, res: any) => {
   res.status(statusCode);
   return res.send({
     status: statusCode,
-    error: err
+    error: err,
   });
 });
 
