@@ -34,19 +34,19 @@ export enum Direction {
   LEFT = 'left',
 }
 
-interface Position {
+export interface Position {
   x: number;
   y: number;
 }
 
-interface Snake {
+export interface Snake {
   id: string;
   name: string;
   health: number;
   body: Position[];
 }
 
-interface Board {
+export interface Board {
   height: number;
   width: number;
   food: Position[];

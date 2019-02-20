@@ -1,21 +1,49 @@
 import { random } from 'lodash';
 
-import { Snek, Start, Move, MoveRes, StartRes, Direction } from '../types';
-const { DOWN, LEFT, RIGHT, UP } = Direction;
+import { Snek, Start, Move, MoveRes, StartRes, Direction, Board, Snake } from '../types';
+import { getValidDirs } from '../util';
+
+/**
+ * Priorities:
+ *  Pick up food
+ *  Trap other snakes
+ *  Aim for empty areas of board
+ */
 
 export default class Nate extends Snek {
+  board: Board;
+  lastBoard: Board | null = null;
+  lastYou: Snake | null = null;
+
+  constructor(body: Start) {
+    super();
+    this.board = body.board;
+  }
+
   public start(body: Start): StartRes {
     return {
       color: '#75d7fa',
-      headType: 'beluga',
-      tailType: 'freckled',
+      headType: 'tongue',
+      tailType: 'sharp',
     };
   }
 
   public move(body: Move): MoveRes {
-    const moves = [DOWN, LEFT, RIGHT, UP];
-    const ndx = random(3);
-    console.log(ndx);
+    console.log(`TURN ${body.turn}`);
+    const { board, you } = body;
+
+    const moves = this.getValidMoves(board, you);
+    const ndx = random(moves.length - 1);
+
+    this.lastBoard = board;
+    this.lastYou = you;
+
     return { move: moves[ndx] };
+  }
+
+  private getValidMoves(board: Board, you: Snake): Direction[] {
+    const curPos = you.body[0];
+    const validDirs = getValidDirs(curPos, board);
+    return validDirs;
   }
 }

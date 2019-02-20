@@ -38,7 +38,7 @@ Object.entries(snakes).forEach(([name, Snake]) => {
   app.post(`/${name}/start`, (request: StartRequest, response) => {
     const { id } = request.body.game;
     console.log(`New game ${id}`);
-    const snake = new Snake();
+    const snake = new Snake(request.body);
     games.set(id, snake);
     const res = snake.start(request.body);
     return response.json(res);
