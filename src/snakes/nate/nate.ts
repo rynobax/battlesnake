@@ -40,10 +40,4 @@ export default class Nate extends Snek {
 
     return { move: moves[ndx] };
   }
-
-  private getValidMoves(board: Board, you: Snake): Direction[] {
-    const curPos = you.body[0];
-    const validDirs = getValidDirs(curPos, board);
-    return validDirs;
-  }
 }

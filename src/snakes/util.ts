@@ -84,3 +84,7 @@ function move(pos: Position, dir: Direction) {
 function eql(pos1: Position, pos2: Position) {
   return pos1.x === pos2.x && pos1.y === pos2.y;
 }
+
+export function moveSnake(board: Board, id: string, dir: Direction) {
+  return board;
+}
