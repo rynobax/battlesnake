@@ -35,7 +35,8 @@ export default class Nate extends Snek {
     console.log(`TURN ${body.turn}`);
 
     console.time('minimax');
-    const [score, move] = this.minimax(board, 10, true);
+    // depth must be odd or it will return null
+    const [score, move] = this.minimax(board, 11);
     console.timeEnd('minimax');
     if (!move) throw Error('Minimax did not return a move!');
     console.log(`Move ${move} has score ${score}`);

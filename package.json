@@ -43,6 +43,7 @@
   },
   "scripts": {
     "start": "cross-env PORT=5000 nodemon",
+    "start:6000": "cross-env PORT=6000 nodemon",
     "compile": "tsc"
   },
   "husky": {

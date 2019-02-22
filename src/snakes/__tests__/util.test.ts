@@ -1,18 +1,37 @@
 import { Board, Direction } from '../types';
-import { getValidDirs } from '../util';
+import { getValidDirs, moveSnake, nonNull } from '../util';
 const { DOWN, LEFT, RIGHT, UP } = Direction;
 
-import { uniq } from 'lodash';
+import { uniq, flatten } from 'lodash';
 
 const isUpper = (c: string) => c.toUpperCase() === c;
 const notEmpty = (c: string) => c !== '-';
+const isFood = (c: string) => c === '.';
+const notFood = (c: string) => c !== '.';
 
-function b(strs: TemplateStringsArray): Board {
+const tails: {
+  [name: string]: string;
+} = {
+  A: 'b',
+  X: 'y',
+};
+
+export function b(strs: TemplateStringsArray): Board {
   const str = strs[0];
-  const rows = str
+  const trimmed = str
     .split('\n')
     .map(s => s.trim())
     .filter(s => !!s);
+  const hps = trimmed.filter(s => s.includes(':'));
+  const rows = trimmed.filter(s => !s.includes(':'));
+
+  const hpMap: { [key: string]: number } = {};
+  hps.forEach(s => {
+    const key = s[0];
+    const val = Number(s.slice(2));
+    hpMap[key] = val;
+  });
+
   const lens = rows.map(s => s.length);
   if (uniq(lens).length > 1) throw Error('Row length mismatch');
   const allChars: string[] = [];
@@ -28,16 +47,32 @@ function b(strs: TemplateStringsArray): Board {
   const snakes = allChars
     .filter(notEmpty)
     .filter(isUpper)
+    .filter(notFood)
     .map(name => {
       const [head] = coords.filter(({ c }) => c === name);
       const body = coords.filter(({ c }) => c === name.toLowerCase());
+      const [tailCoord] = coords.filter(({ c }) => c === tails[name]);
+      const tail = [];
+      if (tailCoord) tail.push(tailCoord, tailCoord);
+
+      let health = 100;
+      if (hpMap[name] !== undefined) health = hpMap[name];
       return {
         id: name,
         name,
-        health: 1,
-        body: [head, ...body].map(({ x, y }) => ({ x, y })),
+        health,
+        body: [head, ...body, ...tail].map(({ x, y }) => ({ x, y })),
       };
     });
+
+  const food = flatten(
+    rows.map((row, y) =>
+      row.split('').map((c, x) => {
+        if (c === '.') return { x, y };
+        else return null;
+      })
+    )
+  ).filter(nonNull);
 
   const height = rows.length;
   const width = rows[0].length;
@@ -45,35 +80,64 @@ function b(strs: TemplateStringsArray): Board {
   return {
     height,
     width,
-    food: [],
+    food,
     snakes,
   };
 }
 
-it('b works', () => {
-  const board = b`
-  Xx-
-  -Y-
-  -y-
-  `;
-  expect(board).toEqual({
-    height: 3,
-    width: 3,
-    food: [],
-    snakes: [
-      {
-        id: 'X',
-        name: 'X',
-        health: 1,
-        body: [{ x: 0, y: 0 }, { x: 1, y: 0 }],
-      },
-      {
-        id: 'Y',
-        name: 'Y',
-        health: 1,
-        body: [{ x: 1, y: 1 }, { x: 1, y: 2 }],
-      },
-    ],
+describe('b tag', () => {
+  it('basic', () => {
+    const board = b`
+    Xx-
+    -A-
+    -a.
+    `;
+    expect(board).toEqual({
+      height: 3,
+      width: 3,
+      food: [{ x: 2, y: 2 }],
+      snakes: [
+        {
+          id: 'X',
+          name: 'X',
+          health: 100,
+          body: [{ x: 0, y: 0 }, { x: 1, y: 0 }],
+        },
+        {
+          id: 'A',
+          name: 'A',
+          health: 100,
+          body: [{ x: 1, y: 1 }, { x: 1, y: 2 }],
+        },
+      ],
+    });
+  });
+
+  it('tail', () => {
+    const board = b`
+    Xxy
+    -A-
+    -ab
+    `;
+    expect(board).toEqual({
+      height: 3,
+      width: 3,
+      food: [],
+      snakes: [
+        {
+          id: 'X',
+          name: 'X',
+          health: 100,
+          body: [{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 }, { x: 2, y: 0 }],
+        },
+        {
+          id: 'A',
+          name: 'A',
+          health: 100,
+          body: [{ x: 1, y: 1 }, { x: 1, y: 2 }, { x: 2, y: 2 }, { x: 2, y: 2 }],
+        },
+      ],
+    });
   });
 });
 
@@ -136,9 +200,9 @@ describe('getValidDirs', () => {
     [
       'Snake',
       b`
-      -Y--
-      -yX-
-      -y--
+      -A--
+      -aX-
+      -a--
       `,
       [RIGHT, UP, DOWN],
     ],
@@ -155,5 +219,112 @@ describe('getValidDirs', () => {
     const [snake] = board.snakes.filter(s => s.name === 'X');
     const head = snake.body[0];
     expect(getValidDirs(head, board).sort()).toEqual(expected.sort());
+  });
+});
+
+describe('moveSnake', () => {
+  test.each([
+    [
+      'basic move',
+      b`
+      ---
+      -X-
+      -x-
+      `,
+      UP,
+      b`
+      -X-
+      -x-
+      ---
+      X:99
+      `,
+    ],
+    [
+      'turn',
+      b`
+      ---
+      -X-
+      -x-
+      `,
+      RIGHT,
+      b`
+      ---
+      -xX
+      ---
+      X:99
+      `,
+    ],
+    [
+      'death into right wall',
+      b`
+      ---
+      -xX
+      ---
+      `,
+      RIGHT,
+      b`
+      ---
+      ---
+      ---
+      `,
+    ],
+    [
+      'death into left wall',
+      b`
+      ---
+      Xx-
+      ---
+      `,
+      LEFT,
+      b`
+      ---
+      ---
+      ---
+      `,
+    ],
+    [
+      'death into top wall',
+      b`
+      -X-
+      -x-
+      ---
+      `,
+      UP,
+      b`
+      ---
+      ---
+      ---
+      `,
+    ],
+    [
+      'death into bottom wall',
+      b`
+      ---
+      -x-
+      -X-
+      `,
+      DOWN,
+      b`
+      ---
+      ---
+      ---
+      `,
+    ],
+    [
+      'death into snake',
+      b`
+      aaA
+      -X-
+      -x-
+      `,
+      UP,
+      b`
+      aaA
+      ---
+      ---
+      `,
+    ],
+  ])('%s', (_, board: Board, dir: Direction, expected: Board) => {
+    expect(moveSnake(board, 'X', dir)).toEqual(expected);
   });
 });

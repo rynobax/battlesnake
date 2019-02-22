@@ -3,6 +3,10 @@ import { difference } from 'lodash';
 import { Position, Direction, Board } from './types';
 const { DOWN, LEFT, RIGHT, UP } = Direction;
 
+export function nonNull<T>(value: T | null): value is T {
+  return value !== null;
+}
+
 export const ALL_DIRS = [DOWN, LEFT, RIGHT, UP];
 
 const OFFSETS = {
@@ -85,6 +89,41 @@ function eql(pos1: Position, pos2: Position) {
   return pos1.x === pos2.x && pos1.y === pos2.y;
 }
 
-export function moveSnake(board: Board, id: string, dir: Direction) {
-  return board;
+function checkForCrash(board: Board, pos: Position) {
+  // Collision with snake
+  if (board.snakes.some(snake => snake.body.some(body => eql(body, pos)))) return true;
+  // Collision with wall
+  if (pos.x < 0 || pos.x >= board.width || pos.y < 0 || pos.y >= board.height) return true;
+  return false;
+}
+
+function checkForFoodPickup(board: Board, pos: Position) {
+  return board.food.some(f => eql(f, pos));
+}
+
+// TODO: Change health
+//  Food
+//  Death
+// TODO: Tail when picking up stuff
+export function moveSnake(board: Board, id: string, dir: Direction): Board {
+  return {
+    ...board,
+    snakes: board.snakes
+      .map(snake => {
+        if (snake.id !== id) return snake;
+        const [head] = snake.body;
+        const [tail, ...rest] = [...snake.body].reverse();
+        const newHead = move(head, dir);
+        let body = [newHead, ...rest.reverse()];
+        if (checkForCrash(board, newHead)) return null;
+        if (checkForFoodPickup(board, newHead)) {
+          body.push(tail);
+          return { ...snake, body: body, health: 100 };
+        }
+        // TODO: Do you die on 1 hp or 0 hp?
+        if (snake.health === 1) return null;
+        return { ...snake, body: body, health: snake.health - 1 };
+      })
+      .filter(nonNull),
+  };
 }
