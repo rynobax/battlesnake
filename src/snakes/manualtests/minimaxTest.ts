@@ -1,12 +1,13 @@
 import { createMinimax } from '../minimax';
-import { b } from './util.test';
+import { b } from '../testutil';
 
 const board = b`
--X.
--x-
----
+X-Y
+x-y
+-.-
 `;
 
 const minimax = createMinimax('X');
 
-minimax(board);
+const res = minimax(board);
+console.log(res);
