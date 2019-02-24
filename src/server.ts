@@ -45,6 +45,7 @@ Object.entries(snakes).forEach(([name, Snake]) => {
   });
 
   app.post(`/${name}/move`, (request: MoveRequest, response) => {
+    if (!request.body.game) console.log(request.body);
     const { id } = request.body.game;
     const snake = games.get(id);
     if (!snake) throw Error(`Could not find snake for game ${id}!`);

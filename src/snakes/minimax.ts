@@ -17,7 +17,6 @@ function doMoves(boards: Board[], id: string) {
       const [snake] = board.snakes.filter(snake => snake.id === id);
       const currentPos = snake.body[0];
       const possibleDirs = getValidDirs(currentPos, board);
-      console.log(possibleDirs);
       return possibleDirs.map(dir => ({
         newBoard: moveSnake(board, id, dir),
         dir,
@@ -26,7 +25,7 @@ function doMoves(boards: Board[], id: string) {
   );
 }
 
-export type Minimax = (
+type Minimax = (
   board: Board,
   depth: number,
   maximizingPlayer: boolean,
@@ -34,12 +33,18 @@ export type Minimax = (
   beta: number
 ) => [number, Direction | null];
 
+export type MinimaxFn = (board: Board) => [number, Direction | null];
+
+// Depth should be even
+const MAX_DEPTH = 12;
+const DEATH_OFFSET = -10000;
+
 export function createMinimax(heroId: string) {
   function currentPositionScore(board: Board) {
     // high number = good for maximizing player
     // 1 point for each food
     // -1 point for each opposing body length
-    const score = board.snakes.reduce((p, c) => {
+    let score = board.snakes.reduce((p, c) => {
       if (c.id === heroId) {
         return p + c.body.length;
       } else {
@@ -54,7 +59,6 @@ export function createMinimax(heroId: string) {
       if (maximizingPlayer) return s.id === heroId;
       else return s.id !== heroId;
     });
-    console.log({ movers });
     let res: {
       newBoard: Board;
       dir: Direction;
@@ -66,9 +70,10 @@ export function createMinimax(heroId: string) {
       res = doMoves(boards, mover.id);
       boards = res.map(r => r.newBoard);
     }
-    console.log({ res });
     return res;
   }
+
+  // let currentMoves: Direction[] = [];
 
   /**
    * Finds best move at a given depth from a given board state
@@ -79,7 +84,6 @@ export function createMinimax(heroId: string) {
    * @param beta Best score minimizing player is assured of
    * @param maximizingPlayer
    */
-
   const minimax: Minimax = (
     board,
     depth,
@@ -88,14 +92,15 @@ export function createMinimax(heroId: string) {
     alpha,
     beta
   ) => {
+    // console.log(`*** DEPTH ${depth} ***`)
     const [hero] = board.snakes.filter(snake => snake.id === heroId);
-    const gameIsOver = (maximizingPlayer && !hero) || hero.health === 0;
+    const gameIsOver = !hero || hero.health === 0;
     if (gameIsOver) {
-      console.log('game is over');
-      return [Number.NEGATIVE_INFINITY, null];
+      // console.log('game is over');
+      return [DEATH_OFFSET + (MAX_DEPTH - depth), null];
     }
     if (depth == 0) {
-      console.log('depth 0');
+      // console.log('depth 0');
       return [currentPositionScore(board), null];
     }
 
@@ -103,8 +108,16 @@ export function createMinimax(heroId: string) {
       let maxScore = Number.NEGATIVE_INFINITY;
       let bestDir: Direction | null = null;
       for (const { dir, newBoard } of possiblePositions(board, maximizingPlayer)) {
+        if (!bestDir) bestDir = dir;
+        // if(depth === MAX_DEPTH || depth === MAX_DEPTH - 1) console.log('@@@@@@');
+        // console.log(`Hero turning ${dir}`);
+        // currentMoves.push(dir);
+        // console.log(currentMoves);
         const [score] = minimax(newBoard, depth - 1, false, alpha, beta);
-        console.log({ maximizingPlayer, score, dir });
+        if (depth === MAX_DEPTH || depth === MAX_DEPTH - 1)
+          console.log(`${dir}: ${score}  (max: ${maxScore})`);
+        // currentMoves.pop();
+        // console.log({ maximizingPlayer, score, dir });
         if (score > maxScore) {
           bestDir = dir;
           maxScore = score;
@@ -112,14 +125,17 @@ export function createMinimax(heroId: string) {
         alpha = max(alpha, score);
         if (beta <= alpha) break;
       }
-      console.log(`${depth}|best: ${bestDir}`);
+      // console.log(`${depth}|best: ${bestDir} - ${maxScore}`);
+
       return [maxScore, bestDir];
     } else {
       let minScore = Number.POSITIVE_INFINITY;
       let worstDir: Direction | null = null;
       for (const { newBoard, dir: badDir } of possiblePositions(board, maximizingPlayer)) {
+        if (!worstDir) worstDir = badDir;
+        // console.log(`Opponent turning ${badDir}`);
         const [score, dir] = minimax(newBoard, depth - 1, true, alpha, beta);
-        console.log({ maximizingPlayer, score, badDir });
+        // console.log({ maximizingPlayer, score, badDir });
         if (score < minScore) {
           worstDir = dir;
           minScore = score;
@@ -127,11 +143,11 @@ export function createMinimax(heroId: string) {
         beta = min(beta, score);
         if (beta <= alpha) break;
       }
-      console.log(`${depth}|worst: ${worstDir}`);
+      // console.log(`${depth}|worst: ${worstDir} - ${minScore}`);
       return [minScore, worstDir];
     }
   };
 
   return (board: Board) =>
-    minimax(board, 2, false, Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY);
+    minimax(board, MAX_DEPTH, false, Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY);
 }

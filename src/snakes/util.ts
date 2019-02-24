@@ -106,7 +106,8 @@ function checkForFoodPickup(board: Board, pos: Position) {
 //  Death
 // TODO: Tail when picking up stuff
 export function moveSnake(board: Board, id: string, dir: Direction): Board {
-  return {
+  let pickedUpFood: Position | null = null;
+  const newBoard = {
     ...board,
     snakes: board.snakes
       .map(snake => {
@@ -117,6 +118,7 @@ export function moveSnake(board: Board, id: string, dir: Direction): Board {
         let body = [newHead, ...rest.reverse()];
         if (checkForCrash(board, newHead)) return null;
         if (checkForFoodPickup(board, newHead)) {
+          pickedUpFood = newHead;
           body.push(tail);
           return { ...snake, body: body, health: 100 };
         }
@@ -126,4 +128,8 @@ export function moveSnake(board: Board, id: string, dir: Direction): Board {
       })
       .filter(nonNull),
   };
+  newBoard.food = board.food
+    .map(food => (pickedUpFood && eql(food, pickedUpFood) ? null : food))
+    .filter(nonNull);
+  return newBoard;
 }

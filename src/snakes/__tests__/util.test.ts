@@ -137,10 +137,10 @@ describe('getValidDirs', () => {
       'two sneks',
       b`
       Y-X
-      y-x
+      y--
       ---
       `,
-      [UP, DOWN, LEFT],
+      [DOWN, LEFT],
     ],
   ])('%s', (_, board: Board, expected) => {
     const [snake] = board.snakes.filter(s => s.name === 'X');
@@ -251,7 +251,32 @@ describe('moveSnake', () => {
       ---
       `,
     ],
-  ])('%s', (_, board: Board, dir: Direction, expected: Board) => {
-    expect(moveSnake(board, 'X', dir)).toEqual(expected);
+    [
+      'eating food',
+      b`
+      -
+      -
+      .
+      X
+      `,
+      [UP, UP, UP],
+      b`
+      X
+      x
+      -
+      -
+      X:98
+      `,
+    ],
+  ])('%s', (_, board: Board, dir: Direction | Direction[], expected: Board) => {
+    let res = board;
+    if (Array.isArray(dir)) {
+      dir.forEach(d => {
+        res = moveSnake(res, 'X', d);
+      });
+    } else {
+      res = moveSnake(res, 'X', dir);
+    }
+    expect(res).toEqual(expected);
   });
 });

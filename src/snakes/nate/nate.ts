@@ -1,7 +1,7 @@
 import { random } from 'lodash';
 
-import { Snek, Start, Move, MoveRes, StartRes, Board, Snake } from '../types';
-import { createMinimax, Minimax } from '../minimax';
+import { Snek, Start, Move, MoveRes, StartRes, Board, Snake, Direction } from '../types';
+import { createMinimax, MinimaxFn } from '../minimax';
 
 /**
  * Priorities:
@@ -14,7 +14,7 @@ export default class Nate extends Snek {
   board: Board;
   lastBoard: Board | null = null;
   lastYou: Snake | null = null;
-  minimax: Minimax;
+  minimax: MinimaxFn;
 
   constructor(body: Start) {
     super();
@@ -24,7 +24,7 @@ export default class Nate extends Snek {
 
   public start(body: Start): StartRes {
     return {
-      color: '#75d7fa',
+      // color: '#75d7fa',
       headType: 'tongue',
       tailType: 'sharp',
     };
@@ -36,9 +36,10 @@ export default class Nate extends Snek {
 
     console.time('minimax');
     // depth must be odd or it will return null
-    const [score, move] = this.minimax(board, 11);
+    let [score, move] = this.minimax(board);
     console.timeEnd('minimax');
-    if (!move) throw Error('Minimax did not return a move!');
+    if (!move) console.log('Minimax did not return a move, moving up!');
+    move = Direction.UP;
     console.log(`Move ${move} has score ${score}`);
 
     this.lastBoard = board;
