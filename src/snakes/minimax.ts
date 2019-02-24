@@ -36,7 +36,7 @@ type Minimax = (
 export type MinimaxFn = (board: Board) => [number, Direction | null];
 
 // Depth should be even
-const MAX_DEPTH = 12;
+const MAX_DEPTH = 6;
 const DEATH_OFFSET = -10000;
 
 export function createMinimax(heroId: string) {

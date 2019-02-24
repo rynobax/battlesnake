@@ -3,7 +3,7 @@ import * as express from 'express';
 import * as logger from 'morgan';
 
 import snakes from './snakes';
-import { Start, Move, End, Snek } from './snakes/types';
+import { Start, Move, End, Snek, Direction } from './snakes/types';
 
 const app = express();
 
@@ -45,7 +45,10 @@ Object.entries(snakes).forEach(([name, Snake]) => {
   });
 
   app.post(`/${name}/move`, (request: MoveRequest, response) => {
-    if (!request.body.game) console.log(request.body);
+    // These are pings I think
+    if (request.body.you.id === 'you') return response.json({ move: Direction.UP });
+
+    console.log(JSON.stringify(request.body, null, 2));
     const { id } = request.body.game;
     const snake = games.get(id);
     if (!snake) throw Error(`Could not find snake for game ${id}!`);

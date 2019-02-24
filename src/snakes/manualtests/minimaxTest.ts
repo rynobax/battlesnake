@@ -2,10 +2,13 @@ import { createMinimax } from '../minimax';
 import { b } from '../testutil';
 
 const board = b`
--Aaa
---.-
--xx-
---X-
+-X---.-
+-x-----
+-------
+-------
+-A-----
+-a---f.
+-----F-
 `;
 
 const minimax = createMinimax('X');

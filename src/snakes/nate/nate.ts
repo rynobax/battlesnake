@@ -1,5 +1,4 @@
-import { random } from 'lodash';
-
+import { performance } from 'perf_hooks';
 import { Snek, Start, Move, MoveRes, StartRes, Board, Snake, Direction } from '../types';
 import { createMinimax, MinimaxFn } from '../minimax';
 
@@ -34,12 +33,20 @@ export default class Nate extends Snek {
     const { board, you } = body;
     console.log(`TURN ${body.turn}`);
 
-    console.time('minimax');
     // depth must be odd or it will return null
+    const startT = performance.now();
     let [score, move] = this.minimax(board);
-    console.timeEnd('minimax');
-    if (!move) console.log('Minimax did not return a move, moving up!');
-    move = Direction.UP;
+    var endT = performance.now();
+    const runTime = Math.round(endT - startT);
+    if (runTime > 200) {
+      console.log(`\n\n\n!!!!!!!!!\nMINMAX TOOK ${runTime}ms\n!!!!!!!!!\n\n\n`);
+    } else {
+      console.log(`minimax took ${runTime}ms`);
+    }
+    if (!move) {
+      console.log('Minimax did not return a move, moving up!');
+      move = Direction.UP;
+    }
     console.log(`Move ${move} has score ${score}`);
 
     this.lastBoard = board;
